@@ -5,6 +5,7 @@ import time
 import hmac
 import hashlib
 
+
 class SwingBreakoutBot:
     def __init__(self, api_key, api_secret, base_url, symbol, timeframe, equity, risk_per_trade):
         self.api_key = api_key
@@ -25,7 +26,9 @@ class SwingBreakoutBot:
         }
         response = requests.get(endpoint, params=params)
         data = response.json()
-        df = pd.DataFrame(data, columns=['Open Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close Time', 'Quote Asset Volume', 'Number of Trades', 'Taker Buy Base Asset Volume', 'Taker Buy Quote Asset Volume', 'Ignore'])
+        df = pd.DataFrame(data, columns=['Open Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close Time',
+                                         'Quote Asset Volume', 'Number of Trades', 'Taker Buy Base Asset Volume',
+                                         'Taker Buy Quote Asset Volume', 'Ignore'])
         df['Close'] = df['Close'].astype(float)
         return df
 
@@ -67,9 +70,21 @@ class SwingBreakoutBot:
             print(f"Trade Response: {data}")
 
     def run(self):
-        df = self.fetch_market_data()
-        signals = self.identify_signals(df)
-        self.execute_trades(signals)
+        while True:
+            try:
+                df = self.fetch_market_data()
+                if not df.empty:
+                    signals = self.identify_signals(df)
+                    if not signals.empty:
+                        self.execute_trades(signals)
+                else:
+                    print("Keine neuen Daten verfügbar.")
+            except Exception as e:
+                print(f"Ein Fehler ist aufgetreten: {e}")
+
+            # Waiting time between polling processes, e.g. 60 seconds
+            time.sleep(20)
+
 
 if __name__ == '__main__':
     API_KEY = 'my_api_key'
